@@ -71,14 +71,28 @@ while true {
         break
     }
 
-    if !FileManager.default.fileExists(atPath: cmd) {
-        if let pathCmd = PATH[cmd] {
-            cmd = pathCmd
+    let task = Process()
+    let input: Pipe = Pipe()
+    task.arguments = []
+    var first = true
+    for tok in cmd.split(separator: " ") {
+        if first {
+            var cmd0 = String(tok)
+            if !FileManager.default.fileExists(atPath: cmd0) {
+                if let pathCmd = PATH[cmd0] {
+                    cmd0 = pathCmd
+                }
+            }
+
+            task.executableURL = URL(fileURLWithPath: cmd0)
+            first = false
+            continue
         }
+       task.arguments?.append(String(tok))
     }
     
-    let task = Process()
-    task.executableURL = URL(fileURLWithPath: cmd)
+    task.standardInput = input
+    task.standardOutput = FileHandle.standardOutput
     
     do {
         try task.run()
