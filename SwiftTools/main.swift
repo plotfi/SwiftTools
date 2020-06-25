@@ -60,22 +60,29 @@ while true {
     var cmd = cmdOpt!
     cmd = cmd.trimmingCharacters(in: NSCharacterSet.whitespaces)
 
-    switch cmd {
-    case "":
+    if cmd == "exit" {
+          break
+    } else if cmd == "" {
+        continue
+    }
+
+    let args = cmd.split(separator: " ")
+    switch args[0] {
+    case "ls":
+        lsCmdlet(dir: FileManager.default.currentDirectoryPath, args: args)
+        continue
+    case "cat":
+        catCmdlet(dir: FileManager.default.currentDirectoryPath, args: args)
         continue
     default:
         break
     }
-    
-    if cmd == "exit" {
-        break
-    }
-
+ 
     let task = Process()
     let input: Pipe = Pipe()
     task.arguments = []
     var first = true
-    for tok in cmd.split(separator: " ") {
+    for tok in args {
         if first {
             var cmd0 = String(tok)
             if !FileManager.default.fileExists(atPath: cmd0) {
@@ -93,6 +100,7 @@ while true {
     
     task.standardInput = input
     task.standardOutput = FileHandle.standardOutput
+    task.standardError = FileHandle.standardError
     
     do {
         try task.run()
